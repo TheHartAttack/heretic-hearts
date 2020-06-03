@@ -1,0 +1,23 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents { 
+    function isToOrFrom() {
+      let isTo = resource.data.to == request.auth.uid;
+      let isFrom = resource.data.from == request.auth.uid;
+      return isTo || isFrom;
+    }
+    match /users/{document} {
+      allow read, create, update: if request.auth.uid != null;
+      allow delete: if request.auth.uid == resource.data.id;
+    }
+    match /messages/{document} {
+    	allow read, update: if isToOrFrom();
+      allow create: if request.auth.uid != null;
+      allow delete: if false;
+    }
+    match /contact/{document} {
+      allow create: if true;
+      allow read, update, delete: if false;
+    }
+  }
+}
